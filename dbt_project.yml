@@ -1,0 +1,31 @@
+name: dbt_snowflake
+version: 1.0.0
+config-version: 2
+
+profile: dbt_snowflake
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+analysis-paths: ["analyses"]
+
+clean-targets:
+  - target
+  - dbt_packages
+
+models:
+  dbt_snowflake:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+
+seeds:
+  dbt_snowflake:
+    +schema: raw
+    raw_customers:
+      +column_types:
+        customer_id: integer
+        signup_date: date

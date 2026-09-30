@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: One row per customer for analytics and reporting.
+    columns:
+      - name: customer_id
+        data_tests:
+          - not_null
+          - unique
+      - name: full_name
+        data_tests:
+          - not_null
