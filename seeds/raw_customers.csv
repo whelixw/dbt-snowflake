@@ -1,6 +1,0 @@
-customer_id,first_name,last_name,email,signup_date,status
-1,Ada,Lovelace,ada@example.com,2026-01-15,active
-2,Grace,Hopper,grace@example.com,2026-02-03,active
-3,Alan,Turing,alan@example.com,2026-02-20,inactive
-4,Katherine,Johnson,katherine@example.com,2026-03-11,active
-5,Edsger,Dijkstra,edsger@example.com,2026-04-01,trial

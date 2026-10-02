@@ -1,3 +1,4 @@
+
 .venv/
 __pycache__/
 .user.yml
@@ -5,3 +6,6 @@ target/
 dbt_packages/
 logs/
 profiles.yml
+.env
+*.pem
+*.key

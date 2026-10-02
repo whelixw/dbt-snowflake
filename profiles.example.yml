@@ -1,4 +1,4 @@
-dbt_snowflake:
+snowflake_dbt_project:
   target: dev
   outputs:
     dev:
