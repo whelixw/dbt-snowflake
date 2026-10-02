@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: stg_coffee_shop_sales
+    columns:
+      - name: store_id
+        data_tests:
+          - not_null
+      - name: transaction_id
+        data_tests:
+          - not_null
+      - name: transaction_month
+        data_tests:
+          - not_null
+      - name: transaction_weekday
+        data_tests:
+          - not_null
+      - name: transaction_hour
+        data_tests:
+          - not_null
