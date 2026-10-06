@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: stg_products
+    columns:
+      - name: product_id
+        data_tests:
+          - not_null
+      - name: product_category
+        data_tests:
+          - not_null
+      - name: product_type
+        data_tests:
+          - not_null
+      - name: product_detail
+        data_tests:
+          - not_null
+
