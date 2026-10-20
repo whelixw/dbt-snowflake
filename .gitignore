@@ -10,3 +10,7 @@ profiles.yml
 *.pem
 *.key
 .streamlit/secrets.toml
+
+# Local connection settings and duplicate exports
+.streamlit/
+outputs/

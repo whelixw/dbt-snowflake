@@ -4,24 +4,83 @@ import streamlit as st
 
 st.set_page_config(page_title="Coffee Shop Sales", page_icon="☕", layout="wide")
 
-@st.cache_data
-def load_sales():
-    data = pd.read_csv(Path(__file__).resolve().parents[1] / "seeds" / "coffee_shop_sales_n3000.csv", parse_dates=["transaction_date"])
-    data["revenue"] = data["transaction_qty"] * data["unit_price"]
-    data["hour"] = pd.to_datetime(data["transaction_time"], format="%H:%M:%S").dt.hour
+def prepare_sales(data):
+    data = data.copy()
+    data.columns = data.columns.str.lower()
+    data["transaction_date"] = pd.to_datetime(data["transaction_date"])
+    data["hour"] = data["transaction_hour"]
     return data
 
-sales = load_sales()
+
+@st.cache_data
+def load_saved_sales():
+    csv_path = Path(__file__).resolve().parent / "data" / "fct_coffee_shop_sales.csv"
+    return prepare_sales(pd.read_csv(csv_path))
+
+
+def load_live_sales():
+    with st.sidebar.form("snowflake_login"):
+        password = st.text_input("Snowflake password", type="password")
+        passcode = st.text_input("Authenticator code", type="password")
+        submitted = st.form_submit_button("Connect")
+
+    if not submitted:
+        st.info("Enter your password and current authenticator code, then select Connect.")
+        st.stop()
+    if not password or not passcode.strip():
+        st.info("Both your password and authenticator code are required.")
+        st.stop()
+
+    try:
+        conn = st.connection(
+            "snowflake",
+            authenticator="username_password_mfa",
+            password=password,
+            passcode=passcode.strip(),
+        )
+        data = conn.query("select * from fct_coffee_shop_sales", ttl=300)
+    except Exception:
+        st.error("Could not load Snowflake data. Check your local connection settings and credentials, or use Saved demo.")
+        st.stop()
+
+    return prepare_sales(data)
+
+
+def reset_filters():
+    for key in ("stores", "categories", "dates"):
+        st.session_state.pop(key, None)
+
+
+def change_source():
+    reset_filters()
+    st.session_state.pop("live_sales", None)
+
+
 st.title("☕ Coffee Shop Sales")
-st.caption("Explore the repository's coffee shop sample. No Snowflake account required.")
+source = st.sidebar.radio(
+    "Data source",
+    ["Saved demo", "Live Snowflake"],
+    key="data_source",
+    on_change=change_source,
+)
+if source == "Saved demo":
+    sales = load_saved_sales()
+    st.caption("Saved demo · Snowflake snapshot exported 20 Oct 2026 · dbt model: fct_coffee_shop_sales")
+else:
+    st.caption("Live Snowflake data · dbt model: fct_coffee_shop_sales")
+    if "live_sales" not in st.session_state:
+        st.session_state["live_sales"] = load_live_sales()
+    sales = st.session_state["live_sales"]
+    st.sidebar.caption("Connected. Data stays loaded while you explore. Switch modes to reconnect.")
+
 with st.sidebar:
     st.header("Explore sales")
     stores = st.multiselect("Stores", sorted(sales.store_location.unique()), default=sorted(sales.store_location.unique()), key="stores")
     categories = st.multiselect("Product categories", sorted(sales.product_category.unique()), default=sorted(sales.product_category.unique()), key="categories")
     first, last = sales.transaction_date.min().date(), sales.transaction_date.max().date()
     dates = st.date_input("Date range", (first, last), min_value=first, max_value=last, key="dates")
-    st.caption(f"Sample coverage: {first:%d %b %Y} – {last:%d %b %Y} · {len(sales):,} rows")
-    st.button("Reset filters", on_click=lambda: st.session_state.clear())
+    st.caption(f"Data coverage: {first:%d %b %Y} – {last:%d %b %Y} · {len(sales):,} rows")
+    st.button("Reset filters", on_click=reset_filters)
 if len(dates) != 2:
     st.info("Choose both a start and an end date.")
     st.stop()
@@ -60,5 +119,9 @@ with details:
     st.dataframe(export, hide_index=True, width="stretch")
     st.download_button("Download filtered sales", export.to_csv(index=False).encode("utf-8"), "coffee_shop_sales.csv", "text/csv")
 with st.expander("About this demo"):
-    st.write("This dashboard reads the committed coffee shop CSV and calculates summaries with pandas. It mirrors the revenue and order definitions in the dbt store totals models, but does not query Snowflake or execute dbt. The limited sample keeps the demo reproducible after the Snowflake trial ends.")
+    st.write("Both modes use the fct_coffee_shop_sales reporting model and calculate dashboard summaries with pandas. Revenue = quantity × unit price; orders count sales rows.")
+    if source == "Saved demo":
+        st.write("Saved demo reads a local CSV exported from Snowflake on 20 October 2026. The verified snapshot contains 149,116 sales rows covering January–June 2023. This mode requires no credentials or Snowflake connection and remains usable after the trial ends.")
+    else:
+        st.write("Live Snowflake queries fct_coffee_shop_sales using your local connection settings and password plus authenticator code. Results stay in this session while you explore; switch modes to reconnect. This dashboard does not run dbt.")
 

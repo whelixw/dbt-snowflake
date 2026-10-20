@@ -12,11 +12,11 @@ python -m venv .venv
 .venv\Scripts\python.exe -m streamlit run dashboard/app.py
 ```
 
-The dashboard reads the committed `seeds/coffee_shop_sales_n3000.csv` sample. No credentials, running database, or dbt installation are needed. It continues to work after your Snowflake trial expires.
+The dashboard defaults to **Saved demo**, reading `dashboard/data/fct_coffee_shop_sales.csv`: actual results exported from the Snowflake dbt reporting model. This mode needs no credentials, database connection, or dbt installation and continues to work after the Snowflake trial expires. **Live Snowflake** queries the same reporting model using your local connection settings and a masked password plus authenticator code (`username_password_mfa`).
 
 Features: store, category, and date filters; revenue, orders, units sold, and average order value; daily and hourly charts; store and category comparisons; top products; and filtered CSV downloads.
 
-Revenue = quantity × unit price. Orders count source rows, matching `store_order_totals.sql`. Currency is unspecified. This is a limited sample, not a full trading history. Dashboard summaries are computed with pandas rather than read from materialized dbt models.
+Revenue = quantity × unit price. Orders count source rows, matching `store_order_totals.sql`. Currency is unspecified. The snapshot covers January–June 2023 with 149,116 sales rows, 214,470 units, and 698,812.33 revenue. Both modes calculate dashboard summaries with pandas from the reporting model results. Snapshot provenance and verification totals are recorded in [dashboard/data/readme.md](dashboard/data/readme.md).
 
 ## Share a hosted demo from GitHub
 
@@ -25,7 +25,7 @@ GitHub stores the code and sample data; a Streamlit server runs the interactive 
 1. Push the repository to GitHub.
 2. Sign in to [Streamlit Community Cloud](https://share.streamlit.io/) and create an app.
 3. Select your repository and branch, with `dashboard/app.py` as the entrypoint.
-4. Deploy and share the generated URL. No Snowflake secrets are needed.
+4. Deploy and share the generated URL. Saved demo needs no Snowflake secrets. Live Snowflake additionally requires local or hosted connection settings; never commit credentials.
 
 Community Cloud finds `dashboard/requirements.txt` beside the entrypoint, keeping dashboard dependencies separate from the root dbt dependencies. See the [deployment guide](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy).
 
@@ -39,4 +39,4 @@ dbt run
 dbt test
 ```
 
-These commands require an active Snowflake account. The Streamlit demo is independent of that pipeline. A future live-data version can query the dbt models while retaining this sample mode.
+These commands require an active Snowflake account. Saved demo is independent of that pipeline. Live Snowflake reads `fct_coffee_shop_sales`, defined in `models/marts/fct_coffee_shop_sales.sql`. The full source dataset is `seeds/coffee_shop_sales_full.csv`. Keep connection settings in the ignored `.streamlit/secrets.toml`; password and authenticator code are entered in the app.

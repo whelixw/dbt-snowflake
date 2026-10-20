@@ -1,2 +1,2 @@
-streamlit==1.65.0
+streamlit[snowflake]==1.65.0
 pandas==2.3.3
