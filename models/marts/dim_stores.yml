@@ -1,12 +1,13 @@
 version: 2
 
 models:
-  - name: stg_stores
+  - name: dim_stores
+    description: "One row per store with its location."
     columns:
       - name: store_id
         data_tests:
           - not_null
+          - unique
       - name: store_location
         data_tests:
           - not_null
-

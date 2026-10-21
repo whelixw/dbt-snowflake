@@ -1,11 +1,13 @@
 version: 2
 
 models:
-  - name: stg_products
+  - name: dim_products
+    description: "One row per product with its category, type, and description."
     columns:
       - name: product_id
         data_tests:
           - not_null
+          - unique
       - name: product_category
         data_tests:
           - not_null
@@ -15,4 +17,3 @@ models:
       - name: product_detail
         data_tests:
           - not_null
-

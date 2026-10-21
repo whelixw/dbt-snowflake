@@ -1,6 +1,23 @@
 # Coffee shop analytics
 
-A dbt + Snowflake learning project with a portable Streamlit dashboard.
+A dbt + Snowflake portfolio project exploring coffee shop sales across three stores, with a portable Streamlit dashboard.
+
+## Data and architecture
+
+The full dataset covers 1 January–30 June 2023: **149,116 sales rows**, **214,470 units**, and **698,812.33 revenue**.
+
+```text
+coffee_shop_sales_full (CSV seed)
+    └── stg_coffee_shop_sales (explicit types, trimmed text, calendar fields)
+        ├── dim_products (80 products)
+        ├── dim_stores (3 stores)
+        └── fct_coffee_shop_sales (sales rows and revenue)
+            ├── store_order_totals
+            ├── store_order_totals_hours
+            └── Streamlit: live query OR saved CSV snapshot
+```
+
+Staging lives in `models/staging`; dimensions, facts, and summaries live in `models/marts`. Dimensions describe products and stores; the sales fact keeps those attributes for straightforward dashboard filtering. The separate `orders` seed and `customer_order_totals` model are retained learning examples outside the coffee shop pipeline.
 
 ## Run the dashboard
 
@@ -40,3 +57,26 @@ dbt test
 ```
 
 These commands require an active Snowflake account. Saved demo is independent of that pipeline. Live Snowflake reads `fct_coffee_shop_sales`, defined in `models/marts/fct_coffee_shop_sales.sql`. The full source dataset is `seeds/coffee_shop_sales_full.csv`. Keep connection settings in the ignored `.streamlit/secrets.toml`; password and authenticator code are entered in the app.
+
+
+## Validation
+
+The dbt tests check required values, unique sale and dimension IDs, valid calendar values, positive quantities, nonnegative prices, and sales references to product/store dimensions. The current models were built and validated in Snowflake on 21 October 2026.
+
+The saved snapshot was exported and verified on 20 October 2026. It is a fixed historical export; later SQL cleanup does not automatically refresh it. See its provenance record for the export totals.
+
+GitHub Actions runs the offline snapshot and dashboard checks without Snowflake credentials. Run the same checks locally after installing the dashboard dependencies:
+
+```powershell
+.venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py" -v
+```
+
+These checks protect the verified snapshot totals, revenue calculation, saved-mode isolation from Snowflake, filtering, reset, and source switching. Snowflake dbt tests run separately with an active account.
+
+## Scope and limitations
+
+- Orders and average order value use sales-row counts, not reconstructed customer baskets.
+- Currency and customer identity are not supplied by the coffee shop dataset.
+- Saved demo is a reproducible historical snapshot, not a live refresh pipeline.
+- Live mode requires an active Snowflake account and configured connection settings. The public demo can run entirely in Saved demo without secrets.
+- Model renames do not delete old Snowflake relations automatically.

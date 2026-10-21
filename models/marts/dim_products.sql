@@ -6,4 +6,3 @@ select distinct
 	product_type, 
 	product_detail
 from {{ ref('stg_coffee_shop_sales') }}
-order by product_id

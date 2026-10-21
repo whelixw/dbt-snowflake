@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: fct_coffee_shop_sales
+    description: "One row per source sale, including store and product attributes and calculated revenue."
+    columns:
+      - name: transaction_id
+        data_tests:
+          - not_null
+          - unique
+      - name: store_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_stores')
+                field: store_id
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: product_id
