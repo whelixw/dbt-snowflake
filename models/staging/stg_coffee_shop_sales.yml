@@ -9,12 +9,51 @@ models:
       - name: transaction_id
         data_tests:
           - not_null
+          - unique
+      - name: transaction_date
+        data_tests:
+          - not_null
+      - name: transaction_time
+        data_tests:
+          - not_null
+      - name: transaction_qty
+        data_tests:
+          - not_null
+      - name: product_id
+        data_tests:
+          - not_null
+      - name: unit_price
+        data_tests:
+          - not_null
+      - name: store_location
+        data_tests:
+          - not_null
+      - name: product_category
+        data_tests:
+          - not_null
+      - name: product_type
+        data_tests:
+          - not_null
+      - name: product_detail
+        data_tests:
+          - not_null
       - name: transaction_month
         data_tests:
           - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+                quote: false
       - name: transaction_weekday
         data_tests:
           - not_null
+          - accepted_values:
+              arguments:
+                values: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
       - name: transaction_hour
         data_tests:
           - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+                quote: false

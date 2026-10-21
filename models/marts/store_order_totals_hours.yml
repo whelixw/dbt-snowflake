@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: store_order_totals_hours
+    description: "One row per store and hour of day, summarized across all sales dates."
+    columns:
+      - name: store_id
+        data_tests:
+          - not_null
+      - name: transaction_hour
+        data_tests:
+          - not_null
+      - name: order_count
+        data_tests:
+          - not_null
+      - name: total_amount
+        description: "Total units sold, despite the historical column name."
+        data_tests:
+          - not_null
+      - name: total_revenue
+        data_tests:
+          - not_null

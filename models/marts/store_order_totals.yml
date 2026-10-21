@@ -2,12 +2,17 @@ version: 2
 
 models:
   - name: store_order_totals
+    description: "One row per store with sales-row count, units sold, and revenue."
     columns:
       - name: store_id
         data_tests:
           - not_null
           - unique
+      - name: order_count
+        data_tests:
+          - not_null
       - name: total_amount
+        description: "Total units sold, despite the historical column name."
         data_tests:
           - not_null
       - name: total_revenue
