@@ -2,6 +2,12 @@
 
 A dbt + Snowflake portfolio project exploring coffee shop sales across three stores, with a portable Streamlit dashboard.
 
+**[Open the interactive demo](https://whelixw-coffee-shop-sales.streamlit.app/)** · [Offline checks](https://github.com/whelixw/dbt-snowflake/actions/workflows/saved-demo.yml)
+
+The public demo opens in Saved demo mode and needs no Snowflake login.
+
+![Store and hourly revenue charts with consistent store colors](docs/dashboard.png)
+
 ## Data and architecture
 
 The full dataset covers 1 January–30 June 2023: **149,116 sales rows**, **214,470 units**, and **698,812.33 revenue**.
