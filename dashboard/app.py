@@ -1,8 +1,37 @@
 from pathlib import Path
+import altair as alt
 import pandas as pd
 import streamlit as st
 
 st.set_page_config(page_title="Coffee Shop Sales", page_icon="☕", layout="wide")
+
+STORE_COLORS = {
+    "Astoria": "#368A83",
+    "Hell's Kitchen": "#CD7952",
+    "Lower Manhattan": "#8174A8",
+}
+CATEGORY_COLORS = {
+    "Bakery": "#C98A46",
+    "Branded": "#8C738D",
+    "Coffee": "#85583E",
+    "Coffee beans": "#A87657",
+    "Drinking Chocolate": "#B66873",
+    "Flavours": "#CF9B45",
+    "Loose Tea": "#8B9B52",
+    "Packaged Chocolate": "#9B6B72",
+    "Tea": "#368A83",
+}
+
+
+def color_scale(palette):
+    return alt.Scale(domain=list(palette), range=list(palette.values()))
+
+
+def chart_style(chart):
+    return chart.configure_view(strokeWidth=0).configure_axis(
+        gridColor="#888888", gridOpacity=0.12, domain=False, tickSize=0,
+        labelPadding=8, titlePadding=12,
+    )
 
 def prepare_sales(data):
     data = data.copy()
@@ -100,17 +129,56 @@ with overview:
     st.subheader("Daily revenue")
     daily = filtered.groupby("transaction_date").revenue.sum().reindex(pd.date_range(dates[0], dates[1]), fill_value=0)
     daily.index.name = "Date"
-    st.line_chart(daily)
+    daily_data = daily.rename("revenue").reset_index()
+    daily_base = alt.Chart(daily_data).encode(
+        x=alt.X("Date:T", title="Date", axis=alt.Axis(format="%d %b")),
+        y=alt.Y("revenue:Q", title="Revenue", axis=alt.Axis(format=",.0f")),
+        tooltip=[alt.Tooltip("Date:T", title="Date", format="%d %b %Y"),
+                 alt.Tooltip("revenue:Q", title="Revenue", format=",.2f")],
+    )
+    daily_chart = daily_base.mark_area(color="#CD7952", opacity=0.15) + daily_base.mark_line(color="#CD7952", strokeWidth=2.5)
+    st.altair_chart(chart_style(daily_chart.properties(height=280)), width="stretch")
     left, right = st.columns(2)
     with left:
         st.subheader("Revenue by store")
-        st.bar_chart(filtered.groupby("store_location").revenue.sum())
+        store_data = filtered.groupby("store_location", as_index=False).revenue.sum()
+        store_chart = alt.Chart(store_data).mark_bar(cornerRadiusEnd=5).encode(
+            x=alt.X("revenue:Q", title="Revenue", axis=alt.Axis(format=",.0f")),
+            y=alt.Y("store_location:N", title=None, sort="-x"),
+            color=alt.Color("store_location:N", scale=color_scale(STORE_COLORS), legend=None),
+            tooltip=[alt.Tooltip("store_location:N", title="Store"),
+                     alt.Tooltip("revenue:Q", title="Revenue", format=",.2f")],
+        )
+        st.altair_chart(chart_style(store_chart.properties(height=240)), width="stretch")
     with right:
         st.subheader("Revenue by hour")
-        st.bar_chart(filtered.groupby("hour").revenue.sum().reindex(range(24), fill_value=0))
+        hourly = filtered.groupby(["hour", "store_location"]).revenue.sum()
+        hour_index = pd.MultiIndex.from_product(
+            [range(24), sorted(filtered.store_location.unique())],
+            names=["hour", "store_location"],
+        )
+        hourly = hourly.reindex(hour_index, fill_value=0).rename("revenue").reset_index()
+        hour_chart = alt.Chart(hourly).mark_bar().encode(
+            x=alt.X("hour:O", title="Hour of day", axis=alt.Axis(labelAngle=0)),
+            y=alt.Y("revenue:Q", title="Revenue", axis=alt.Axis(format=",.0f")),
+            color=alt.Color("store_location:N", title="Store", scale=color_scale(STORE_COLORS),
+                            legend=alt.Legend(orient="bottom")),
+            tooltip=[alt.Tooltip("hour:O", title="Hour"),
+                     alt.Tooltip("store_location:N", title="Store"),
+                     alt.Tooltip("revenue:Q", title="Revenue", format=",.2f")],
+        )
+        st.altair_chart(chart_style(hour_chart.properties(height=240)), width="stretch")
 with details:
     st.subheader("Revenue by product category")
-    st.bar_chart(filtered.groupby("product_category").revenue.sum())
+    category_data = filtered.groupby("product_category", as_index=False).revenue.sum()
+    category_chart = alt.Chart(category_data).mark_bar(cornerRadiusEnd=4).encode(
+        x=alt.X("revenue:Q", title="Revenue", axis=alt.Axis(format=",.0f")),
+        y=alt.Y("product_category:N", title=None, sort="-x"),
+        color=alt.Color("product_category:N", scale=color_scale(CATEGORY_COLORS), legend=None),
+        tooltip=[alt.Tooltip("product_category:N", title="Category"),
+                 alt.Tooltip("revenue:Q", title="Revenue", format=",.2f")],
+    )
+    st.altair_chart(chart_style(category_chart.properties(height=320)), width="stretch")
     st.subheader("Top 10 products")
     products = filtered.groupby("product_detail").agg(units=("transaction_qty", "sum"), revenue=("revenue", "sum")).sort_values("revenue", ascending=False).head(10)
     st.dataframe(products, width="stretch")
